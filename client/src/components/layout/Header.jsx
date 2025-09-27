@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutSuccess } from "../../features/auth/authSlice";
+import { clearCart } from "../../features/cart/cartSlice"; // Import the clearCart action
 import api from "../../config/axios";
 import toast from "react-hot-toast";
 import Cart from "../Cart/Cart";
@@ -17,6 +18,7 @@ const Header = () => {
     try {
       await api.post("/users/logout");
       dispatch(logoutSuccess());
+      dispatch(clearCart()); // <-- BUG FIX: Clear the cart on logout
       toast.success("Logged out successfully");
       navigate("/login");
     } catch (error) {

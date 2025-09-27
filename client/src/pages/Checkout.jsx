@@ -19,7 +19,7 @@ const Checkout = () => {
     const fetchRazorpayKey = async () => {
       try {
         const { data } = await api.get("/payments/razorpay-key");
-        setRazorpayKey(data.key);
+        setRazorpayKey(data.data.key); // Correctly access the nested key
       } catch (error) {
         toast.error("Failed to fetch payment details. Please try again later.");
       }
@@ -35,7 +35,7 @@ const Checkout = () => {
 	
     setIsProcessing(true);
     try {
-      // Step 1: Create a 'pending' order in our database
+      // Step 1: Create a 'pending' order in our database first.
       const orderResponse = await api.post("/orders", {
         cartItems,
         totalAmount,
@@ -43,9 +43,10 @@ const Checkout = () => {
       });
       const internalOrder = orderResponse.data.data;
 
-      // Step 2: Create a Razorpay order
+      // Step 2: Create a Razorpay order using our internal order details.
       const { data: { data: razorpayOrder } } = await api.post("/payments/create-order", {
         amount: totalAmount,
+        orderId: internalOrder._id, // Send our internal order ID
       });
 
       // Step 3: Open Razorpay Checkout Modal
@@ -54,23 +55,15 @@ const Checkout = () => {
         amount: razorpayOrder.amount,
         currency: "INR",
         name: "PreOrder App",
-        description: "Test Transaction",
+        description: "Meal Pre-Order Transaction",
         order_id: razorpayOrder.id,
-        handler: async function (response) {
-          // Step 4: Verify the payment
-          try {
-            await api.post('/payments/verify', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: internalOrder._id,
-            });
-            toast.success("Payment successful!");
-            dispatch(clearCart());
-            navigate(`/order-success/${internalOrder._id}`);
-          } catch (error) {
-            toast.error("Payment verification failed.");
-          }
+        handler: function (response) {
+          // **NO VERIFICATION HERE**
+          // The webhook will handle verification.
+          // On success, we just clear the cart and navigate.
+          toast.success("Payment successful! Awaiting confirmation.");
+          dispatch(clearCart());
+          navigate(`/order-success/${internalOrder._id}`);
         },
         prefill: {
           name: user.name,
@@ -80,19 +73,26 @@ const Checkout = () => {
         theme: {
           color: "#EF4444",
         },
+        modal: {
+            ondismiss: function() {
+                // Handle case where user closes the payment modal
+                toast.error("Payment was not completed.");
+                setIsProcessing(false);
+            }
+        }
       };
 
       const rzp1 = new window.Razorpay(options);
       rzp1.open();
 
     } catch (error) {
-      toast.error("An error occurred. Please try again.");
-    } finally {
+      toast.error(error.response?.data?.message || "An error occurred. Please try again.");
       setIsProcessing(false);
     }
+    // No 'finally' block needed here for setIsProcessing, as the modal has its own lifecycle
   };
   
-return (
+  return (
     <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Order Summary */}
       <div>

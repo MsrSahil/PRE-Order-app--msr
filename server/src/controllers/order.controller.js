@@ -5,6 +5,8 @@ import { Order } from "../models/order.model.js";
 import { MenuItem } from "../models/menuItem.model.js";
 import { Restaurant } from "../models/restaurant.model.js";
 
+// In server/src/controllers/order.controller.js
+
 const placeOrder = asyncHandler(async (req, res) => {
   const { cartItems, totalAmount, eta } = req.body;
   const user = req.user;
@@ -17,7 +19,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, "ETA is required");
   }
 
-  const menuItemIds = cartItems.map(item => item._id);
+  const menuItemIds = cartItems.map((item) => item._id);
   const menuItems = await MenuItem.find({ _id: { $in: menuItemIds } });
 
   if (menuItems.length !== cartItems.length) {
@@ -27,7 +29,10 @@ const placeOrder = asyncHandler(async (req, res) => {
   const restaurantId = menuItems[0].restaurant;
   for (const item of menuItems) {
     if (item.restaurant.toString() !== restaurantId.toString()) {
-      throw new ApiError(400, "All items in the cart must be from the same restaurant");
+      throw new ApiError(
+        400,
+        "All items in the cart must be from the same restaurant"
+      );
     }
   }
 
@@ -43,20 +48,23 @@ const placeOrder = asyncHandler(async (req, res) => {
     totalAmount,
     restaurant: restaurantId,
     eta,
-    status: "pending",
+    status: "pending", // Order starts as pending
   });
 
   if (!order) {
     throw new ApiError(500, "Failed to place order");
   }
-  
+
+  // IMPORTANT: Populate and emit the new order to the dashboard IMMEDIATELY
   const populatedOrder = await order
     .populate("user", "name")
     .populate("items.menuItem", "name");
+    
   req.io.to(restaurantId.toString()).emit("newOrder", populatedOrder);
+
   return res
     .status(201)
-    .json(new ApiResponse(201, order, "Order placed successfully"));
+    .json(new ApiResponse(201, order, "Order created successfully and pending payment"));
 });
 
 const getMyOrders = asyncHandler(async (req, res) => {
@@ -91,11 +99,14 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   order.status = status;
   await order.save({ validateBeforeSave: false });
 
+  // EMIT a real-time update to the dashboard
+  const populatedOrder = await order.populate("user", "name").populate("items.menuItem", "name");
+  req.io.to(order.restaurant.toString()).emit("orderStatusUpdate", populatedOrder);
+
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Order status updated"));
 });
-
 const cancelOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   const userId = req.user._id;
@@ -133,4 +144,23 @@ const cancelOrder = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, order, "Order cancelled successfully"));
 });
 
-export { placeOrder, getMyOrders, updateOrderStatus, cancelOrder };
+// Add this new function in the controller file
+
+const getRestaurantOrders = asyncHandler(async (req, res) => {
+    const { restaurantId } = req.params;
+
+    // Optional: Add filtering for only "active" statuses
+    const activeStatuses = ["pending", "confirmed", "preparing", "ready_for_pickup"];
+
+    const orders = await Order.find({ 
+        restaurant: restaurantId,
+        status: { $in: activeStatuses }
+    })
+    .populate("user", "name")
+    .populate("items.menuItem", "name")
+    .sort({ createdAt: -1 });
+
+    res.status(200).json(new ApiResponse(200, orders, "Restaurant orders fetched successfully"));
+});
+
+export { placeOrder, getMyOrders, updateOrderStatus, cancelOrder, getRestaurantOrders };

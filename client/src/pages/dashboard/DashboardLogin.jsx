@@ -30,14 +30,23 @@ const DashboardLogin = () => {
       const response = await api.post('/users/login', data);
       const userData = response.data.data;
 
-      if (userData.user.role !== 'restaurant') {
+      // -- BUG FIX: Allow both 'restaurant' and 'admin' roles to log in --
+      const authorizedRoles = ['restaurant', 'admin'];
+      if (!authorizedRoles.includes(userData.user.role)) {
         toast.error("You are not authorized to access the dashboard.");
         return;
       }
       
       toast.success(response.data.message);
       dispatch(loginSuccess(userData));
-      navigate('/dashboard');
+
+      // Redirect based on role
+      if (userData.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+      
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
     }
