@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../api/axios";
+import api from "../config/axios";
 import Spinner from "../components/ui/Spinner";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutSuccess } from "../../features/auth/authSlice";
-import api from "../../api/axios";
+import api from "../../config/axios";
 import toast from "react-hot-toast";
 import Cart from "../Cart/Cart";
 

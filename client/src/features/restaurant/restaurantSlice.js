@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../api/axios";
+import api from "../../config/axios";
 
 // Async thunk to fetch all restaurants
 export const fetchRestaurants = createAsyncThunk(

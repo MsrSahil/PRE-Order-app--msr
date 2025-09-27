@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import api from "../config/axios";
 import toast from "react-hot-toast";
 import { clearCart } from "../features/cart/cartSlice";
 
@@ -10,11 +10,29 @@ const Checkout = () => {
   const { user } = useSelector((state) => state.auth);
   const [eta, setEta] = useState("30 minutes");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [razorpayKey, setRazorpayKey] = useState(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    const fetchRazorpayKey = async () => {
+      try {
+        const { data } = await api.get("/payments/razorpay-key");
+        setRazorpayKey(data.key);
+      } catch (error) {
+        toast.error("Failed to fetch payment details. Please try again later.");
+      }
+    };
+    fetchRazorpayKey();
+  }, []);
+
   const handlePayment = async () => {
+    if (!razorpayKey) {
+      toast.error("Payment details are not available yet. Please wait a moment and try again.");
+      return;
+    }
+	
     setIsProcessing(true);
     try {
       // Step 1: Create a 'pending' order in our database
@@ -32,7 +50,7 @@ const Checkout = () => {
 
       // Step 3: Open Razorpay Checkout Modal
       const options = {
-        key: "rzp_test_RMenRuSGmyCaPt", // Apni Key ID yahan daalein
+        key: razorpayKey,
         amount: razorpayOrder.amount,
         currency: "INR",
         name: "PreOrder App",
@@ -41,11 +59,11 @@ const Checkout = () => {
         handler: async function (response) {
           // Step 4: Verify the payment
           try {
-            const verificationResponse = await api.post('/payments/verify', {
+            await api.post('/payments/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              orderId: internalOrder._id, // Hamara database order ID
+              orderId: internalOrder._id,
             });
             toast.success("Payment successful!");
             dispatch(clearCart());
@@ -74,7 +92,6 @@ const Checkout = () => {
     }
   };
   
-  // client/src/pages/Checkout.jsx ka return statement
 return (
     <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Order Summary */}
@@ -118,7 +135,7 @@ return (
           </div>
           <button
             onClick={handlePayment}
-            disabled={isProcessing}
+            disabled={isProcessing || !razorpayKey}
             className="w-full bg-red-600 text-white py-3 rounded-lg text-lg font-bold hover:bg-red-700 disabled:bg-red-400"
           >
             {isProcessing ? 'Processing...' : `Pay ₹${totalAmount.toFixed(2)}`}

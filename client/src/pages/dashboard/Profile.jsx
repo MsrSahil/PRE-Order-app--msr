@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import api from '../../api/axios';
+import api from '../../config/axios';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/ui/Spinner';
 import { useSelector } from 'react-redux';

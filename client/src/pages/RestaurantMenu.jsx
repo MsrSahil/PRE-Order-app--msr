@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api/axios";
+import api from "../config/axios";
 import Spinner from "../components/ui/Spinner";
 import { useDispatch } from "react-redux";
 import { addItem } from "../features/cart/cartSlice";

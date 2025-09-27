@@ -13,9 +13,9 @@ dotenv.config({
 });
 
 const app = express();
-const server = http.createServer(app); // Express app se ek HTTP server banayein
+const server = http.createServer(app); 
 
-const io = new Server(server, { // Socket.io ko HTTP server se attach karein
+const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST"],
@@ -33,6 +33,11 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(morgan("dev"));
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Socket.io connection logic
 io.on("connection", (socket) => {
@@ -56,19 +61,12 @@ import orderRouter from "./src/routes/order.routes.js";
 import paymentRouter from "./src/routes/payment.routes.js";
 import adminRouter from "./src/routes/admin.routes.js";
 
-
-
-
-
 // Routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/restaurants", restaurantRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/admin", adminRouter);
-
-
-
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -86,16 +84,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// App ko request ke saath socket instance pass karne ke liye middleware
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
-
-
 connectDB()
   .then(() => {
-    server.listen(process.env.PORT || 8000, () => { // app.listen ki jagah server.listen
+    server.listen(process.env.PORT || 8000, () => {
       console.log(`🚀 Server is running at port : ${process.env.PORT}`);
     });
   })

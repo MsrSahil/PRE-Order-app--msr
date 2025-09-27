@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import api from "../api/axios";
+import api from "../config/axios";
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";

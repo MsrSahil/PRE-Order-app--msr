@@ -7,16 +7,15 @@ const ProtectedRoute = ({ adminOnly }) => {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // User ko sahi login page par bhejein
-    const loginPath = location.pathname.startsWith('/admin') || location.pathname.startsWith('/dashboard') 
-        ? '/dashboard/login' 
+    const loginPath = location.pathname.startsWith('/admin')
+        ? '/admin/login'
+        : location.pathname.startsWith('/dashboard')
+        ? '/dashboard/login'
         : '/login';
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
   
-  // Agar route sirf admin ke liye hai aur user admin nahi hai
   if (adminOnly && user?.role !== 'admin') {
-      // User ko home page par bhej dein
       return <Navigate to="/" replace />;
   }
 

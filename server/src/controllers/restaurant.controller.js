@@ -15,7 +15,6 @@ const createRestaurant = asyncHandler(async (req, res) => {
   }
   const restaurant = await Restaurant.create({ name, address, imageUrl, owner: req.user._id });
   
-  // Assign restaurant role and ID to the user who created it
   await User.findByIdAndUpdate(req.user._id, {
     role: 'restaurant',
     restaurant: restaurant._id
@@ -48,7 +47,16 @@ const getRestaurantById = asyncHandler(async (req, res) => {
 // @route   POST /api/v1/restaurants/:restaurantId/menu
 const addMenuItem = asyncHandler(async (req, res) => {
     const { restaurantId } = req.params;
-    // Authorization: Check if req.user is the owner of this restaurant
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+        throw new ApiError(404, "Restaurant not found");
+    }
+
+    if (restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to add menu items to this restaurant");
+    }
+    
     const { name, description, price, category, imageUrl } = req.body;
     if(!name || !price) {
         throw new ApiError(400, "Name and price are required");
@@ -63,11 +71,18 @@ const addMenuItem = asyncHandler(async (req, res) => {
 // @route   PUT /api/v1/restaurants/menu/:itemId
 const updateMenuItem = asyncHandler(async (req, res) => {
     const { itemId } = req.params;
-    // Authorization check
-    const updatedItem = await MenuItem.findByIdAndUpdate(itemId, req.body, { new: true });
-    if(!updatedItem) {
+    const menuItem = await MenuItem.findById(itemId).populate('restaurant');
+
+    if (!menuItem) {
         throw new ApiError(404, "Menu item not found");
     }
+
+    if (menuItem.restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this menu item");
+    }
+
+    const updatedItem = await MenuItem.findByIdAndUpdate(itemId, req.body, { new: true });
+    
     return res.status(200).json(new ApiResponse(200, updatedItem, "Menu item updated successfully"));
 });
 
@@ -75,7 +90,16 @@ const updateMenuItem = asyncHandler(async (req, res) => {
 // @route   DELETE /api/v1/restaurants/menu/:itemId
 const deleteMenuItem = asyncHandler(async (req, res) => {
     const { itemId } = req.params;
-    // Authorization check
+    const menuItem = await MenuItem.findById(itemId).populate('restaurant');
+
+    if (!menuItem) {
+        throw new ApiError(404, "Menu item not found");
+    }
+
+    if (menuItem.restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to delete this menu item");
+    }
+    
     await MenuItem.findByIdAndDelete(itemId);
     return res.status(200).json(new ApiResponse(200, {}, "Menu item deleted successfully"));
 });
@@ -92,6 +116,10 @@ const updateRestaurantProfile = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Restaurant not found");
     }
     
+    if (restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this restaurant's profile");
+    }
+
     restaurant.name = name || restaurant.name;
     restaurant.address = address || restaurant.address;
     

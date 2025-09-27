@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import api from '../../api/axios';
+import api from '../../config/axios';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 
@@ -17,7 +17,7 @@ const OrderCard = ({ order, onStatusChange }) => {
         <h4 className="font-semibold">Items:</h4>
         <ul className="list-disc list-inside text-sm">
           {order.items.map(item => (
-            <li key={item._id}>{item.quantity} x {item.menuItem.name} (ID: {item.menuItem.slice(-4)})</li>
+            <li key={item._id}>{item.quantity} x {item.menuItem.name} (ID: {item.menuItem._id.slice(-4)})</li>
           ))}
         </ul>
       </div>
@@ -46,7 +46,7 @@ const Dashboard = () => {
     useEffect(() => {
         if (!restaurantId) return;
 
-        const socket = io("http://localhost:8000"); 
+        const socket = io(); 
 
         socket.on("connect", () => {
             console.log("Connected to socket server");
