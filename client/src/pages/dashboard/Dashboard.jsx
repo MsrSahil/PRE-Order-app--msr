@@ -17,7 +17,7 @@ const OrderCard = ({ order, onStatusChange }) => {
         <h4 className="font-semibold">Items:</h4>
         <ul className="list-disc list-inside text-sm">
           {order.items.map(item => (
-            <li key={item._id}>{item.quantity} x ItemName (ID: {item.menuItem.slice(-4)})</li>
+            <li key={item._id}>{item.quantity} x {item.menuItem.name} (ID: {item.menuItem.slice(-4)})</li>
           ))}
         </ul>
       </div>

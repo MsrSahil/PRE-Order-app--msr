@@ -74,10 +74,48 @@ const Checkout = () => {
     }
   };
   
-  // ... baaki JSX code (Order Summary, etc.)
-  // Bas <button> ko update karein:
-  return (
-    //...
+  // client/src/pages/Checkout.jsx ka return statement
+return (
+    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Order Summary */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+        <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+          {cartItems.map((item) => (
+            <div key={item._id} className="flex justify-between">
+              <span>
+                {item.name} x {item.quantity}
+              </span>
+              <span>₹{item.price * item.quantity}</span>
+            </div>
+          ))}
+          <div className="border-t pt-3 mt-3 flex justify-between font-bold text-lg">
+            <span>Total Amount</span>
+            <span>₹{totalAmount.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Checkout Form */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Your Details</h2>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="eta" className="block font-medium mb-1">
+              Estimated Time of Arrival (ETA)
+            </label>
+            <select
+              id="eta"
+              value={eta}
+              onChange={(e) => setEta(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="30 minutes">30 Minutes</option>
+              <option value="45 minutes">45 Minutes</option>
+              <option value="1 hour">1 Hour</option>
+              <option value="1.5 hours">1.5 Hours</option>
+            </select>
+          </div>
           <button
             onClick={handlePayment}
             disabled={isProcessing}
@@ -85,8 +123,10 @@ const Checkout = () => {
           >
             {isProcessing ? 'Processing...' : `Pay ₹${totalAmount.toFixed(2)}`}
           </button>
-    //...
-  )
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Checkout;

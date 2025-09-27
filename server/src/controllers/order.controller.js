@@ -44,9 +44,10 @@ const placeOrder = asyncHandler(async (req, res) => {
   }
 
   // Emit a real-time event to the specific restaurant's room
-  const populatedOrder = await order.populate('user', 'name');
-  req.io.to(restaurantId.toString()).emit('newOrder', populatedOrder);
-
+  const populatedOrder = await order
+    .populate("user", "name")
+    .populate("items.menuItem", "name"); // Isse update karein
+  req.io.to(restaurantId.toString()).emit("newOrder", populatedOrder);
   return res
     .status(201)
     .json(new ApiResponse(201, order, "Order placed successfully"));
@@ -67,61 +68,69 @@ const getMyOrders = asyncHandler(async (req, res) => {
 });
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
-    const { status } = req.body;
+  const { orderId } = req.params;
+  const { status } = req.body;
 
-    const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId);
 
-    if(!order) {
-        throw new ApiError(404, "Order not found");
-    }
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
 
-    // In a real app, you should add authorization here to ensure
-    // only the owner of the restaurant can change the status.
-    
-    order.status = status;
-    await order.save({ validateBeforeSave: false });
+  // In a real app, you should add authorization here to ensure
+  // only the owner of the restaurant can change the status.
 
-    // You could also emit an event to the user here to notify them of the status update
-    // req.io.to(order.user.toString()).emit('orderStatusUpdate', order);
+  order.status = status;
+  await order.save({ validateBeforeSave: false });
 
-    return res.status(200).json(new ApiResponse(200, order, "Order status updated"));
+  // You could also emit an event to the user here to notify them of the status update
+  // req.io.to(order.user.toString()).emit('orderStatusUpdate', order);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "Order status updated"));
 });
-
 
 const cancelOrder = asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
-    const userId = req.user._id;
+  const { orderId } = req.params;
+  const userId = req.user._id;
 
-    const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId);
 
-    if (!order) {
-        throw new ApiError(404, "Order not found");
-    }
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
 
-    // Check if the user canceling the order is the one who placed it
-    if (order.user.toString() !== userId.toString()) {
-        throw new ApiError(403, "You are not authorized to cancel this order");
-    }
+  // Check if the user canceling the order is the one who placed it
+  if (order.user.toString() !== userId.toString()) {
+    throw new ApiError(403, "You are not authorized to cancel this order");
+  }
 
-    // Check if the order is already in a final state
-    if (["completed", "cancelled"].includes(order.status)) {
-        throw new ApiError(400, `Cannot cancel an order that is already ${order.status}`);
-    }
+  // Check if the order is already in a final state
+  if (["completed", "cancelled"].includes(order.status)) {
+    throw new ApiError(
+      400,
+      `Cannot cancel an order that is already ${order.status}`
+    );
+  }
 
-    // Check if the order was placed within the last 5 minutes
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (order.createdAt < fiveMinutesAgo) {
-        throw new ApiError(400, "Order can only be cancelled within 5 minutes of placement");
-    }
+  // Check if the order was placed within the last 5 minutes
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  if (order.createdAt < fiveMinutesAgo) {
+    throw new ApiError(
+      400,
+      "Order can only be cancelled within 5 minutes of placement"
+    );
+  }
 
-    order.status = "cancelled";
-    await order.save({ validateBeforeSave: false });
+  order.status = "cancelled";
+  await order.save({ validateBeforeSave: false });
 
-    // Yahan hum refund ka logic trigger kar sakte hain
+  // Yahan hum refund ka logic trigger kar sakte hain
 
-    return res.status(200).json(new ApiResponse(200, order, "Order cancelled successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "Order cancelled successfully"));
 });
-
 
 export { placeOrder, getMyOrders, updateOrderStatus, cancelOrder }; // Naya function export karein
