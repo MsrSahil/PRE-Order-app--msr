@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutSuccess } from "../../features/auth/authSlice";
-import { clearCart } from "../../features/cart/cartSlice"; // Import the clearCart action
+import { clearCart } from "../../features/cart/cartSlice";
 import api from "../../config/axios";
 import toast from "react-hot-toast";
 import Cart from "../Cart/Cart";
@@ -18,11 +18,88 @@ const Header = () => {
     try {
       await api.post("/users/logout");
       dispatch(logoutSuccess());
-      dispatch(clearCart()); // <-- BUG FIX: Clear the cart on logout
+      dispatch(clearCart());
       toast.success("Logged out successfully");
       navigate("/login");
-    } catch (error) {
-      toast.error("Logout failed");
+    } catch (error) { // <-- ERROR WAS HERE
+      toast.error("Logout failed"); // Corrected this block
+    }
+  };
+  
+  // -- RENDER NAVIGATION LINKS BASED ON USER ROLE --
+  const renderNavLinks = () => {
+    if (!isAuthenticated) {
+      // Not logged in
+      return (
+        <Link
+          to="/login"
+          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 font-semibold"
+        >
+          Login
+        </Link>
+      );
+    }
+
+    // Common elements for all logged-in users
+    const commonElements = (
+        <div className="flex items-center space-x-4">
+            <Link to="/profile" className="font-medium hover:text-red-600">
+                {user?.name}
+            </Link>
+            <button
+                onClick={handleLogout}
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 font-semibold"
+            >
+                Logout
+            </button>
+        </div>
+    );
+
+    // Role-specific links
+    switch (user?.role) {
+      case 'customer':
+        return (
+          <>
+            <Link to="/restaurants" className="text-gray-600 hover:text-red-600 font-medium">
+              Restaurants
+            </Link>
+            <Link to="/my-orders" className="text-gray-600 hover:text-red-600 font-medium">
+              My Orders
+            </Link>
+            <button onClick={() => setCartVisible(true)} className="relative">
+              <span className="text-2xl">🛒</span>
+              {totalQuantity > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {totalQuantity}
+                </span>
+              )}
+            </button>
+            {commonElements}
+          </>
+        );
+      
+      case 'restaurant':
+        return (
+          <>
+            <Link to="/dashboard" className="text-gray-600 hover:text-red-600 font-medium">
+              Go to Dashboard
+            </Link>
+            {commonElements}
+          </>
+        );
+
+      case 'admin':
+        return (
+          <>
+            <Link to="/admin" className="text-gray-600 hover:text-red-600 font-medium">
+              Admin Panel
+            </Link>
+            {commonElements}
+          </>
+        );
+
+      default:
+        return commonElements;
     }
   };
 
@@ -34,46 +111,12 @@ const Header = () => {
             PreOrder
           </Link>
           <nav className="flex items-center space-x-6">
-            <Link to="/restaurants" className="text-gray-600 hover:text-red-600">
-              Restaurants
-            </Link>
-            {isAuthenticated && (
-              <Link to="/my-orders" className="text-gray-600 hover:text-red-600">
-                My Orders
-              </Link>
-            )}
-            <button onClick={() => setCartVisible(true)} className="relative">
-              <span className="text-2xl">🛒</span>
-              {totalQuantity > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalQuantity}
-                </span>
-              )}
-            </button>
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/profile" className="font-medium">
-                  {user?.name}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-              >
-                Login
-              </Link>
-            )}
+            {renderNavLinks()}
           </nav>
         </div>
       </header>
-      <Cart isVisible={isCartVisible} onClose={() => setCartVisible(false)} />
+      {/* Render Cart only if the user is a customer */}
+      {user?.role === 'customer' && <Cart isVisible={isCartVisible} onClose={() => setCartVisible(false)} />}
     </>
   );
 };

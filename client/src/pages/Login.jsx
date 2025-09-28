@@ -61,6 +61,13 @@ const Login = () => {
             <p className="text-red-500 text-sm">{errors.password.message}</p>
           )}
         </div>
+        
+        <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-red-600 hover:underline">
+                Forgot Password?
+            </Link>
+        </div>
+
         <button
           type="submit"
           disabled={isSubmitting}
@@ -71,10 +78,18 @@ const Login = () => {
         <p className="text-center">
           Don't have an account?{" "}
           <Link to="/register" className="text-red-600">
-            Sign up
+            Sign up as a Customer
           </Link>
         </p>
       </form>
+      
+      {/* -- NEW LINK FOR RESTAURANT OWNERS -- */}
+      <div className="mt-6 text-center border-t pt-4">
+        <Link to="/register-restaurant" className="text-gray-600 font-semibold hover:text-red-700">
+            Want to partner with us? Register your Restaurant
+        </Link>
+      </div>
+
     </div>
   );
 };

@@ -14,7 +14,10 @@ const Profile = () => {
     const restaurantId = user?.restaurantId;
 
     useEffect(() => {
-        if (!restaurantId) return;
+        if (!restaurantId) {
+            setLoading(false);
+            return;
+        };
         const fetchProfile = async () => {
             try {
                 setLoading(true);
@@ -42,39 +45,53 @@ const Profile = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center"><Spinner /></div>
+        return <div className="flex justify-center mt-10"><Spinner /></div>
     }
 
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">Restaurant Profile</h1>
-            <div className="max-w-lg bg-white p-6 rounded-lg shadow-md">
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="max-w-2xl bg-white p-6 md:p-8 rounded-xl shadow-lg border">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div>
-                        <label className="block font-medium">Restaurant Name</label>
+                        <label htmlFor="name" className="block font-medium text-gray-700">Restaurant Name</label>
                         <input 
+                            id="name"
                             {...register('name', { required: 'Name is required' })}
                             type="text" 
-                            className="w-full mt-1 p-2 border rounded-md" 
+                            className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" 
                         />
-                        {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+                        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                     </div>
                     <div>
-                        <label className="block font-medium">Address</label>
+                        <label htmlFor="address" className="block font-medium text-gray-700">Address</label>
                         <textarea 
+                            id="address"
                             {...register('address', { required: 'Address is required' })}
-                            className="w-full mt-1 p-2 border rounded-md" 
+                            className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" 
                             rows="3"
                         ></textarea>
-                        {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
+                        {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
                     </div>
-                    <button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:bg-red-400"
-                    >
-                        {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </button>
+                    <div>
+                        <label htmlFor="imageUrl" className="block font-medium text-gray-700">Image URL</label>
+                        <input 
+                            id="imageUrl"
+                            {...register('imageUrl', { required: 'Image URL is required' })}
+                            type="text" 
+                            className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" 
+                        />
+                        {errors.imageUrl && <p className="text-red-500 text-sm mt-1">{errors.imageUrl.message}</p>}
+                    </div>
+                    <div className="pt-2">
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 disabled:bg-red-400 transition-colors"
+                        >
+                            {isSubmitting ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

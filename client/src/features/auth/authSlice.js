@@ -20,8 +20,14 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
     },
+    // -- NEW REDUCER TO UPDATE USER INFO --
+    updateUserSuccess: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
 });
 
-export const { loginSuccess, logoutSuccess } = authSlice.actions;
+export const { loginSuccess, logoutSuccess, updateUserSuccess } = authSlice.actions;
 export default authSlice.reducer;

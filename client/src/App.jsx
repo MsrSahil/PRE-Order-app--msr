@@ -11,6 +11,9 @@ import RestaurantMenu from "./pages/RestaurantMenu";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import MyOrders from "./pages/MyOrders";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import RestaurantRegister from "./pages/RestaurantRegister"; // <-- IMPORT
 
 // Dashboard Imports
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -33,7 +36,10 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="register" element={<Register />} />
+        <Route path="register-restaurant" element={<RestaurantRegister />} /> {/* <-- NEW ROUTE */}
         <Route path="login" element={<Login />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:token" element={<ResetPassword />} />
         <Route path="restaurants" element={<Restaurants />} />
         <Route path="restaurants/:id" element={<RestaurantMenu />} />
 

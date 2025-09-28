@@ -7,9 +7,17 @@ import { saveState } from "../utils/localStorage";
 // Create a listener middleware
 const listenerMiddleware = createListenerMiddleware();
 
-// Add a listener for cart actions
+const cartActionTypes = [
+  addItem.type,
+  removeItem.type,
+  decreaseQuantity.type,
+  clearCart.type,
+  loadCart.type
+];
+
+// Add a listener that uses a 'matcher' function to identify cart actions
 listenerMiddleware.startListening({
-  actions: [addItem.type, removeItem.type, decreaseQuantity.type, clearCart.type, loadCart.type],
+  matcher: (action) => cartActionTypes.includes(action.type),
   effect: (action, listenerApi) => {
     // On any cart change, save the state to local storage
     saveState({

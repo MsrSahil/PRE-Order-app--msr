@@ -162,5 +162,51 @@ const getRestaurantOrders = asyncHandler(async (req, res) => {
 
     res.status(200).json(new ApiResponse(200, orders, "Restaurant orders fetched successfully"));
 });
+const rejectOrder = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId).populate('restaurant');
 
-export { placeOrder, getMyOrders, updateOrderStatus, cancelOrder, getRestaurantOrders };
+    if (!order) {
+        throw new ApiError(404, "Order not found");
+    }
+
+    // Authorize that the user owns the restaurant
+    if (order.restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to reject this order");
+    }
+
+    // A restaurant should only be able to reject an order that is 'pending' or 'confirmed'
+    if (order.status !== 'pending' && order.status !== 'confirmed') {
+        throw new ApiError(400, `Cannot reject an order with status: ${order.status}`);
+    }
+    
+    // Initiate refund process (simulation)
+    // In a real application, you would call the payment gateway's refund API here.
+    console.log(`--- SIMULATING REFUND ---`);
+    console.log(`Initiating refund for Razorpay Payment ID: ${order.paymentDetails?.razorpay_payment_id}`);
+    console.log(`Amount: ₹${order.totalAmount}`);
+    console.log(`-----------------------`);
+    
+    // Update the order status to 'cancelled'
+    order.status = 'cancelled';
+    await order.save({ validateBeforeSave: false });
+
+    // Emit a real-time update to the dashboard
+    const populatedOrder = await order.populate("user", "name").populate("items.menuItem", "name");
+    req.io.to(order.restaurant._id.toString()).emit("orderStatusUpdate", populatedOrder);
+    
+    // TODO: Send a notification to the user that their order was rejected.
+
+    return res.status(200).json(new ApiResponse(200, populatedOrder, "Order has been rejected and refund initiated."));
+});
+
+
+// -- UPDATE THE EXPORT STATEMENT AT THE BOTTOM OF THE FILE --
+export {
+  placeOrder,
+  getMyOrders,
+  updateOrderStatus,
+  cancelOrder,
+  getRestaurantOrders,
+  rejectOrder // Add the new function here
+};

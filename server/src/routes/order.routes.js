@@ -5,17 +5,20 @@ import {
   updateOrderStatus,
   cancelOrder,
   getRestaurantOrders,
+  rejectOrder, // Import new function
 } from "../controllers/order.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.use(verifyJWT); // Isse neeche ke saare routes automatically protected ho jaayenge
+router.use(verifyJWT); // All routes below are protected
 
 router.route("/").post(placeOrder);
-router.route("/my-orders").get(getMyOrders); // Naya route add karein
+router.route("/my-orders").get(getMyOrders);
+router.route("/restaurant/:restaurantId").get(getRestaurantOrders);
+
 router.route("/:orderId/status").put(updateOrderStatus);
 router.route("/:orderId/cancel").put(cancelOrder);
-router.route("/restaurant/:restaurantId").get(getRestaurantOrders);
+router.route("/:orderId/reject").put(rejectOrder); // <-- NEW ROUTE FOR REJECTION
 
 export default router;

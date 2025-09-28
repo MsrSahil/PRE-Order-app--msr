@@ -104,11 +104,11 @@ const deleteMenuItem = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Menu item deleted successfully"));
 });
 
-// @desc    Update restaurant profile
-// @route   PUT /api/v1/restaurants/:restaurantId
+// In server/src/controllers/restaurant.controller.js
+
 const updateRestaurantProfile = asyncHandler(async (req, res) => {
     const { restaurantId } = req.params;
-    const { name, address } = req.body;
+    const { name, address, imageUrl } = req.body; // Add imageUrl here
 
     const restaurant = await Restaurant.findById(restaurantId);
 
@@ -122,12 +122,35 @@ const updateRestaurantProfile = asyncHandler(async (req, res) => {
 
     restaurant.name = name || restaurant.name;
     restaurant.address = address || restaurant.address;
+    restaurant.imageUrl = imageUrl || restaurant.imageUrl; // Add this line
     
     await restaurant.save({ validateBeforeSave: false });
 
     return res.status(200).json(new ApiResponse(200, restaurant, "Restaurant profile updated successfully"));
 });
+// -- NEW FUNCTION: TOGGLE MENU ITEM AVAILABILITY --
+const toggleMenuItemAvailability = asyncHandler(async (req, res) => {
+    const { itemId } = req.params;
+    const menuItem = await MenuItem.findById(itemId).populate('restaurant');
 
+    if (!menuItem) {
+        throw new ApiError(404, "Menu item not found");
+    }
+
+    // Authorize that the user owns the restaurant this menu item belongs to
+    if (menuItem.restaurant.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to modify this menu item");
+    }
+
+    // Toggle the availability status
+    menuItem.isAvailable = !menuItem.isAvailable;
+    await menuItem.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, menuItem, "Menu item availability updated successfully"));
+});
+
+
+// -- UPDATE THE EXPORT STATEMENT AT THE BOTTOM OF THE FILE --
 export {
   createRestaurant,
   getAllRestaurants,
@@ -135,5 +158,6 @@ export {
   addMenuItem,
   updateMenuItem,
   deleteMenuItem,
-  updateRestaurantProfile
+  updateRestaurantProfile,
+  toggleMenuItemAvailability // Add the new function here
 };
