@@ -22,32 +22,34 @@ const ManageUsers = () => {
         fetchUsers();
     }, []);
 
-    if (loading) return <div className="flex justify-center"><Spinner /></div>;
+    if (loading) return <div className="flex justify-center mt-10"><Spinner /></div>;
 
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">Manage Users</h1>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-                <table className="w-full">
-                    <thead className="bg-gray-50">
-                        <tr className="border-b">
-                            <th className="text-left p-3 font-semibold">Name</th>
-                            <th className="text-left p-3 font-semibold">Email</th>
-                            <th className="text-left p-3 font-semibold">Role</th>
-                            <th className="text-left p-3 font-semibold">Joined On</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(user => (
-                            <tr key={user._id} className="border-b hover:bg-gray-50">
-                                <td className="p-3">{user.name}</td>
-                                <td className="p-3">{user.email}</td>
-                                <td className="p-3 capitalize">{user.role}</td>
-                                <td className="p-3">{new Date(user.createdAt).toLocaleDateString()}</td>
+            <div className="bg-white p-4 rounded-xl shadow-md">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Name</th>
+                                <th scope="col" className="px-6 py-3">Email</th>
+                                <th scope="col" className="px-6 py-3">Role</th>
+                                <th scope="col" className="px-6 py-3">Joined On</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {users.map(user => (
+                                <tr key={user._id} className="bg-white border-b hover:bg-gray-50">
+                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{user.name}</th>
+                                    <td className="px-6 py-4">{user.email}</td>
+                                    <td className="px-6 py-4 capitalize">{user.role}</td>
+                                    <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

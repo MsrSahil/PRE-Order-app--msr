@@ -29,8 +29,11 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+// --- BUG FIX: Increase the request body size limit ---
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// --- END OF FIX ---
+
 app.use(morgan("dev"));
 app.use(cookieParser());
 
@@ -75,6 +78,13 @@ app.use((err, req, res, next) => {
       success: err.success,
       message: err.message,
       errors: err.errors,
+    });
+  }
+  // This will catch the payload too large error now
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+        success: false,
+        message: "Request is too large. Please upload a smaller image."
     });
   }
   return res.status(500).json({

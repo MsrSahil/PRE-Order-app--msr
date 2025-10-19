@@ -103,12 +103,11 @@ const deleteMenuItem = asyncHandler(async (req, res) => {
     await MenuItem.findByIdAndDelete(itemId);
     return res.status(200).json(new ApiResponse(200, {}, "Menu item deleted successfully"));
 });
-
 // In server/src/controllers/restaurant.controller.js
 
 const updateRestaurantProfile = asyncHandler(async (req, res) => {
     const { restaurantId } = req.params;
-    const { name, address, imageUrl } = req.body; // Add imageUrl here
+    const { name, address, imageUrl, operatingHours } = req.body; // Add operatingHours
 
     const restaurant = await Restaurant.findById(restaurantId);
 
@@ -122,7 +121,13 @@ const updateRestaurantProfile = asyncHandler(async (req, res) => {
 
     restaurant.name = name || restaurant.name;
     restaurant.address = address || restaurant.address;
-    restaurant.imageUrl = imageUrl || restaurant.imageUrl; // Add this line
+    restaurant.imageUrl = imageUrl || restaurant.imageUrl;
+    
+    // Update operating hours if provided
+    if (operatingHours) {
+        restaurant.operatingHours.open = operatingHours.open || restaurant.operatingHours.open;
+        restaurant.operatingHours.close = operatingHours.close || restaurant.operatingHours.close;
+    }
     
     await restaurant.save({ validateBeforeSave: false });
 

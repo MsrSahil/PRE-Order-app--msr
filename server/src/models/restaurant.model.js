@@ -20,7 +20,17 @@ const restaurantSchema = new Schema(
       ref: "User",
       required: true,
     },
-    // Hum baad mein operating hours aur baaki details add kar sakte hain
+    // -- NEW: OPERATING HOURS --
+    operatingHours: {
+      open: {
+        type: String, // e.g., "10:00"
+        default: "09:00",
+      },
+      close: {
+        type: String, // e.g., "22:00"
+        default: "22:00",
+      },
+    },
   },
   { timestamps: true }
 );
