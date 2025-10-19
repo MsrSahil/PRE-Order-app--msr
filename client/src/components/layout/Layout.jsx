@@ -39,7 +39,26 @@ const Layout = () => {
 
       <Footer />
 
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          // default tailwind classes for the toast container
+          className:
+            "pointer-events-auto bg-white text-gray-900 shadow-lg rounded-lg px-4 py-2 transform transition-all duration-200",
+          success: {
+            duration: 3500,
+            className:
+              "pointer-events-auto bg-emerald-500 text-white shadow-lg rounded-lg px-4 py-2 transform transition-all duration-200",
+          },
+          error: {
+            duration: 5000,
+            className:
+              "pointer-events-auto bg-red-600 text-white shadow-lg rounded-lg px-4 py-2 transform transition-all duration-200",
+          },
+        }}
+        containerClassName="pointer-events-none flex flex-col items-center space-y-2 z-50"
+      />
     </div>
   );
 };
